@@ -50,6 +50,21 @@ header h1 {
     padding-left: 10px;
 }
 
+.attribution {
+    position: fixed;      /* will stay in place */
+    bottom: 10px;
+    left: 10px;
+
+    font-size: 11px;
+    background: #1d153a5e; /* semi-transparent box */
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+.attribution a {
+    color: #fdd1e9;
+}
+
 /* Contains the sidebar-container and content-container */
 .main-container {
     display: flex;
@@ -196,6 +211,9 @@ button:hover {
 }
 
 
+/* ACCOUNT PAGE STYLES */
+
+/* Container for the account information */
 .account-container {
     width: 400px;
     margin: 100px auto;
@@ -204,4 +222,13 @@ button:hover {
     border: 2px solid #e297d2;
     border-radius: 10px;
     text-align: center;
+}
+
+/* Profile picture styles */
+.profile-pic {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;    /* prevents image stretching */
+    border: 2px solid #e297d2;
 }
