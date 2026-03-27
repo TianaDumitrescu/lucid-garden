@@ -4,27 +4,26 @@ from datetime import datetime, timedelta
 
 # Create your models here.
 class Alarm(models.Model):
-    user = models.ForeignKey('User', on_delete=models.CASCADE)
-    time = models.TimeField()
-    label = models.CharField(max_length=100, blank=True)
+    time = models.TimeField() # The time the alarm is set for
+    completed = models.BooleanField(default=False) # Whether the alarm has been marked as completed (serves as a backup for if the alarm is not deleted properly)
 
     def __str__(self):
-        return f"{self.label} at {self.time}"
+        return f"Alarm at {self.time}"
     
-    def get_next_due(alarm):
+    def get_next_due(self):
         now = datetime.now()
 
-        due_today = now.replace(
-            hour=alarm.time.hour,
-            minute=alarm.time.minute,
-            second=0,
-            microsecond=0
+        # Setting the "next due" time to be similar to "now" so it can be compared to "now" to determine if the alarm is due or not.
+        next_due = now.replace(
+            hour= self.time.hour,
+            minute= self.time.minute,
+            second= 0,
+            microsecond= 0
         )
 
-        if due_today > now:
-            return due_today
-        return due_today + timedelta(days=1)
+        return next_due
     
+    # Function to see if the user's set alarm time is due or not
     def is_due(self):
         next_due = self.get_next_due()
         return datetime.now() >= next_due
