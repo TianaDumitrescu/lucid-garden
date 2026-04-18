@@ -2,7 +2,6 @@ import json
 import math
 from django.db import models
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import ArrayField
 from datetime import datetime, timedelta
 from django.utils import timezone
 
@@ -59,13 +58,15 @@ class Lucid(models.Model):
     identification = models.IntegerField
     name = models.CharField(max_length = 64)
     # Types represents what "species" is inherited by the Lucids (i.e. )
-    types = ArrayField(models.CharField(max_length = 64), size = 5)
+    #types = ArrayField(models.CharField(max_length = 64), size = 5)
+    types = models.JSONField(default=list)
     description = models.CharField(max_length = 1024)
     spawn_rate = models.FloatField
     spawn_level_offset = models.IntegerField
     # Evolution represents the current level of the Lucid in it's "progression path"
     # Index one is the previous, index 2 is the next
-    evolution = ArrayField(models.CharField(max_length = 64), size = 2)
+    #evolution = ArrayField(models.CharField(max_length = 64), size = 2)
+    evolution = models.JSONField(default=list)
    
     def __str__(self):
         return f"This is a {self.name} Lucid!"
@@ -94,17 +95,15 @@ class UserDatabase(models.Model):
     currentLoseStreak = models.IntegerField(default = 0);
     # The lucids array essentially holds all the lucids
     # The number represents the Lucid ID
-    lucids = ArrayField(models.IntegerField(), size = 25)
+    #lucids = ArrayField(models.IntegerField(), size = 25)
+    lucids = models.JSONField(default=list)
     # Represents the actual alarm clock model
     alarm = models.ForeignKey(Alarm, on_delete = models.SET_NULL, null = True, blank = True)
 
     # String representing the user
     def __str__(self):
-        return f"Welcome {self.user.name}!"
+        return f"Welcome {self.user.username}!"
 
-    # Initialization for the model, occurs when a user is initially set
-    def __init__(self, user):
-        self.user = user
 
     # Getter for the user
     def get_user(self):

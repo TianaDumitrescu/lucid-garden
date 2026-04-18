@@ -2,10 +2,17 @@ from django.shortcuts import render, redirect
 from .models import Alarm
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.shortcuts import render, redirect
+from .forms import RegisterForm
+from .models import UserDatabase
+from django.contrib.auth import logout, login, authenticate
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def home(request):
     # For the home page, we want to show the user their current alarm (if they have one) and whether it is due or not.
     alarm = Alarm.objects.first()
+    user = request.user
 
     # If there is an alarm, we check if it is due or not and pass that information to the template to be rendered.
     is_due = False
@@ -14,7 +21,8 @@ def home(request):
 
     return render(request, "main/home.html", {
         "alarm": alarm,
-        "is_due": is_due
+        "is_due": is_due,
+        "user": user
     })
 
 def delete_alarm(request):
@@ -58,3 +66,37 @@ def create_alarm(request):
 
 def account(request):
     return render(request, 'main/account.html')
+
+def register(request):
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+
+            # Create your custom UserDatabase entry
+            UserDatabase.objects.create(user=user)
+
+            return redirect("login")
+    else:
+        form = RegisterForm()
+
+    return render(request, "main/register.html", {"form": form})
+
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect("home")
+        else:
+            return render(request, "main/login.html", {"error": "Invalid credentials"})
+
+    return render(request, "main/login.html")
+
+def logout_view(request):
+    logout(request)
+    return redirect("login")

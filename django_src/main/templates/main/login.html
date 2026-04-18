@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucid Garden: Account</title>
+    <link rel="stylesheet" href="{% static 'main/css/styles.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+</head>
+<body>
+
+    <header>
+        <h1 class="title">Lucid Garden</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'account' %}">Account</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Username" />
+        <input type="password" name="password" placeholder="Password" />
+        <button type="submit">Login</button>
+    </form>
+
+    {% if error %}
+    <p>{{ error }}</p>
+    {% endif %}
+
+
+    <div class="attribution">
+        Attribution: <a href="https://www.vecteezy.com/free-vector/default-user">Default User Vectors by Vecteezy</a> and <a href="https://www.vecteezy.com/free-vector/profile">Profile Vectors by Vecteezy</a>
+    </div>
+</body>
+</html>
