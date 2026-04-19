@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from parser import LUCIDS
 from parser import Lucid
+from parser import load_lucids
 
 def create_lucid(unique_id, nickname, species_id):
     species_base = LUCIDS.get(species_id)
@@ -75,6 +76,7 @@ class Lucid(models.Model):
         return f"Name: {self.get_species_name()}\n Description: {self.get_description()}"
 
     def get_species(self):
+        load_lucids()
         lucid = LUCIDS.get(self.species_id)
         return lucid
 
