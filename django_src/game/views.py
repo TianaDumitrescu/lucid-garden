@@ -2,9 +2,10 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
-from .models import BattlePartyState, OwnedLucid
+from main.models import Lucid
+from main.parser import get_species
+from .models import BattlePartyState
 from .services import battle_engine
-from .services.lucid_data import get_species
 from .services.progression import (
     STARTER_SPECIES_IDS,
     apply_level_choice,
@@ -30,7 +31,7 @@ def _error_response(message, status=400):
 @require_GET
 def starter_options(request):
     profile = get_or_create_profile(request.user)
-    options = [get_species(species_id) for species_id in sorted(STARTER_SPECIES_IDS)]
+    options = [get_species(species_id).to_dict() for species_id in sorted(STARTER_SPECIES_IDS)]
     return JsonResponse(
         {
             "starter_chosen": profile.starter_species_id is not None,
@@ -59,7 +60,7 @@ def choose_starter_view(request):
 @login_required
 @require_GET
 def collection_view(request):
-    owned_lucids = OwnedLucid.objects.filter(owner=request.user).order_by("party_slot", "id")
+    owned_lucids = Lucid.objects.filter(owner=request.user).order_by("party_slot", "id")
     payload = [battle_engine.serialize_owned_lucid(lucid) for lucid in owned_lucids]
     return JsonResponse({"collection": payload})
 
@@ -67,7 +68,7 @@ def collection_view(request):
 @login_required
 @require_GET
 def party_view(request):
-    party = OwnedLucid.objects.filter(owner=request.user, party_slot__isnull=False).order_by("party_slot")
+    party = Lucid.objects.filter(owner=request.user, party_slot__isnull=False).order_by("party_slot")
     payload = [battle_engine.serialize_owned_lucid(lucid) for lucid in party]
     return JsonResponse({"party": payload})
 
@@ -97,10 +98,10 @@ def apply_level_choice_view(request):
     if owned_lucid_id is None or stat_choice is None:
         return _error_response("owned_lucid_id and stat_choice are required.")
     try:
-        lucid = OwnedLucid.objects.get(id=int(owned_lucid_id), owner=request.user)
+        lucid = Lucid.objects.get(id=int(owned_lucid_id), owner=request.user)
         lucid = apply_level_choice(lucid, stat_choice)
-    except (OwnedLucid.DoesNotExist, ValueError) as exc:
-        return _error_response(str(exc), status=404 if isinstance(exc, OwnedLucid.DoesNotExist) else 400)
+    except (Lucid.DoesNotExist, ValueError) as exc:
+        return _error_response(str(exc), status=404 if isinstance(exc, Lucid.DoesNotExist) else 400)
     return JsonResponse({"lucid": battle_engine.serialize_owned_lucid(lucid)})
 
 # Starts up battle

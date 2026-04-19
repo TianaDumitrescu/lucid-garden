@@ -1,6 +1,7 @@
 from django.db import transaction
-from game.models import OwnedLucid, PlayerProfile
-from .lucid_data import get_species_for_level
+from game.models import PlayerProfile
+from main.models import Lucid, get_next_lucid_unique_id
+from main.parser import get_species, get_species_for_level
 
 STARTER_SPECIES_IDS = {1, 4, 7}
 VALID_STAT_CHOICES = {"hp", "attack", "speed"}
@@ -17,13 +18,13 @@ def get_or_create_profile(user):
 
 # Returns user's current party
 def get_party_queryset(user):
-    return OwnedLucid.objects.filter(owner=user, party_slot__isnull=False).order_by("party_slot", "id")
+    return Lucid.objects.filter(owner=user, party_slot__isnull=False).order_by("party_slot", "id")
 
 # Handles evolution if level threshold crossed
 def sync_evolution(owned_lucid):
     target_species = get_species_for_level(owned_lucid.species_id, owned_lucid.level)
-    changed = owned_lucid.species_id != target_species["id"]
-    owned_lucid.species_id = target_species["id"]
+    changed = owned_lucid.species_id != target_species.get_id()
+    owned_lucid.species_id = target_species.get_id()
     return changed
 
 # MAIN PROGRESSION FUNCTIONS
@@ -37,9 +38,12 @@ def choose_starter(user, species_id):
     profile = get_or_create_profile(user)
     if profile.starter_species_id is not None:
         raise ValueError("Starter has already been chosen.")
-    starter = OwnedLucid.objects.create(
+    starter_species = get_species(species_id)
+    starter = Lucid.objects.create(
         owner=user,
         species_id=species_id,
+        unique_id=get_next_lucid_unique_id(),
+        nickname=starter_species.get_name(),
         level=1,
         upgrade_history=[],
         party_slot=1,
@@ -102,10 +106,10 @@ def set_party(user, owned_lucid_ids):
         raise ValueError("A party can have at most 3 Lucids.")
     if len(normalized_ids) != len(set(normalized_ids)):
         raise ValueError("A Lucid cannot be assigned to multiple party slots.")
-    selected_lucids = list(OwnedLucid.objects.filter(owner=user, id__in=normalized_ids))
+    selected_lucids = list(Lucid.objects.filter(owner=user, id__in=normalized_ids))
     if len(selected_lucids) != len(normalized_ids):
         raise ValueError("All party Lucids must belong to the current user.")
-    OwnedLucid.objects.filter(owner=user).update(party_slot=None)
+    Lucid.objects.filter(owner=user).update(party_slot=None)
     lucid_by_id = {lucid.id: lucid for lucid in selected_lucids}
     for slot, lucid_id in enumerate(normalized_ids, start=1):
         lucid = lucid_by_id[lucid_id]

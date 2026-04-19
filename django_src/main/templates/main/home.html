@@ -60,7 +60,19 @@
         <div class="content-container">
             <h2 class="content-info">Welcome {{ user.username }}!</h2>
             <div id="main-results">
-
+                <div id="game-message"></div>
+                <div id="starter-section"></div>
+                <div id="levelup-section"></div>
+                <div id="party-section"></div>
+                <div id="collection-section"></div>
+                <div id="battle-section"></div>
+                <div class="game-buttons">
+                    <button id="next-button" onclick="mainHub()">Next</button>
+                    <button id="party-button" onclick="loadParty()">Show Party</button>
+                    <button id="collection-button" onclick="loadCollection()">Show Collection</button>
+                </div>
+        </div>
+    </div>
             </div>
         </div>
     </div>

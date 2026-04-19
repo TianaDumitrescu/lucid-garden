@@ -1,13 +1,14 @@
 import json
 import math
 
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 from django.utils import timezone
-from parser import LUCIDS
-from parser import Lucid
-from parser import load_lucids
+from .parser import LUCIDS
+from .parser import load_lucids
 
 def create_lucid(unique_id, nickname, species_id):
     species_base = LUCIDS.get(species_id)
@@ -16,6 +17,13 @@ def create_lucid(unique_id, nickname, species_id):
         raise ValueError("This species hasn't been initialized.")
 
     return Lucid.objects.create(unique_id = unique_id, nickname = nickname, species_id=species_id)
+
+
+def get_next_lucid_unique_id():
+    last_lucid = Lucid.objects.order_by("-unique_id").first()
+    if last_lucid is None:
+        return 1
+    return last_lucid.unique_id + 1
 
 # Alarm Clock Model
 class Alarm(models.Model):
@@ -66,9 +74,32 @@ class Alarm(models.Model):
 
 # Lucid Model - Essentially represents
 class Lucid(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="lucids", null=True, blank=True)
     unique_id = models.IntegerField()
-    nickname = models.CharField(max_length = 64)
+    nickname = models.CharField(max_length = 64, blank=True)
     species_id = models.IntegerField()
+
+    # The information below is mostly utilized for battling purposes
+    level = models.PositiveIntegerField(default=1)
+    upgrade_history = models.JSONField(default=list, blank=True)
+    pending_levelups = models.PositiveIntegerField(default=0)
+    party_slot = models.PositiveSmallIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("party_slot", "id")
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(party_slot__isnull=True) | Q(party_slot__in=[1, 2, 3]),
+                name="lucid_valid_party_slot",
+            ),
+            models.UniqueConstraint(
+                fields=("owner", "party_slot"),
+                condition=Q(party_slot__isnull=False),
+                name="lucid_unique_party_slot_per_owner",
+            ),
+        ]
    
     def __str__(self):
         return f"This is your {self.get_species_name()} Lucid! Their name is {self.nickname}."
@@ -115,6 +146,13 @@ class Lucid(models.Model):
     def get_evolution(self):
        species = self.get_species()
        return species.get_evolution() if species else []
+
+    def clean(self):
+        if self.level < 1:
+            raise ValidationError("Lucids cannot go below level 1.")
+
+        if len(self.upgrade_history) > max(self.level - 1, 0):
+            raise ValidationError("Upgrade history cannot exceed the Lucid's committed level.")
 
 # User Database Model - Each user will officially have one
 class UserDatabase(models.Model):

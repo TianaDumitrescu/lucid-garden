@@ -1,13 +1,14 @@
 from django.contrib import admin
-from .models import BattlePartyState, BattleSession, OwnedLucid, PlayerProfile
+from main.models import Lucid
+from .models import BattlePartyState, BattleSession, PlayerProfile
 
 # Registers core game models for debugging purpose
 @admin.register(PlayerProfile)
 class PlayerProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "alarm_streak", "battle_charges", "starter_species_id")
 
-@admin.register(OwnedLucid)
-class OwnedLucidAdmin(admin.ModelAdmin):
+@admin.register(Lucid)
+class LucidAdmin(admin.ModelAdmin):
     list_display = ("id", "owner", "species_id", "level", "party_slot", "pending_levelups")
     list_filter = ("party_slot",)
     search_fields = ("owner__username",)
