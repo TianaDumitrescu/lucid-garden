@@ -33,9 +33,10 @@ class OwnedLucid(models.Model):
         ordering = ("party_slot", "id")
         constraints = [
             models.CheckConstraint(
-                check=Q(party_slot__isnull=True) | Q(party_slot__in=[1, 2, 3]),
+                condition=Q(party_slot__isnull=True) | Q(party_slot__in=[1, 2, 3]),
                 name="ownedlucid_valid_party_slot",
             ),
+
             models.UniqueConstraint(
                 fields=("owner", "party_slot"),
                 condition=Q(party_slot__isnull=False),
