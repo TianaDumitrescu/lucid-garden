@@ -289,3 +289,7 @@ button:hover {
     gap: 10px;
     margin: 5px auto;
 }
+
+.next-button, .party-button, .collection-button {
+    display: none;
+}

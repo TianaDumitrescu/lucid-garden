@@ -13,7 +13,6 @@ class PlayerProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return f"{self.user.username}'s game profile"
-
 # Represents an active battle session for a player, including the enemy's species, level, HP, turn counts, and battle log
 class BattleSession(models.Model):
     STATUS_ACTIVE = "active"
