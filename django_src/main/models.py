@@ -19,6 +19,7 @@ def create_lucid(unique_id, nickname, species_id):
 
 # Alarm Clock Model
 class Alarm(models.Model):
+    user = models.OneToOneField(User, on_delete = models.CASCADE) # Each user should only have one alarm, so we use a OneToOneField to link the alarm to the user
     time = models.DateTimeField() # The time the alarm is set for
     completed = models.BooleanField(default=False) # Whether the alarm has been marked as completed (serves as a backup for if the alarm is not deleted properly)
     due_determiner = models.BooleanField(default=False) # This field is used to determine if the alarm is due or not. It is necessary because if the user sets an alarm for a time that has already passed, we want the alarm to be due immediately instead of waiting until the next day. This field is set to True when the alarm is created or updated, and then set to False when the alarm is marked as completed or deleted. This way, if the user sets an alarm for a time that has already passed, the alarm will be due immediately instead of waiting until the next day.
@@ -163,10 +164,10 @@ class UserDatabase(models.Model):
             self.totalPoints -= spending
             return self.totalPoints
             
-    # Setter for the alarm
-    def set_alarm(self, alarm):
-        self.alarm = alarm
+    # # Setter for the alarm
+    # def set_alarm(self, alarm):
+    #     self.alarm = alarm
 
-    # Getter for the alarm
-    def get_alarm(self):
-        return self.alarm
+    # # Getter for the alarm
+    # def get_alarm(self):
+    #     return self.alarm

@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucid Garden: Account</title>
+    <link rel="stylesheet" href="{% static 'main/css/styles.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+</head>
+<body>
+
+    <header>
+        <h1 class="title">Lucid Garden</h1>
+    </header>
+
+    <form method="POST" class="login-form">
+        {% csrf_token %}
+        {% if error %}
+            <p>{{ error }}</p>
+        {% endif %}
+        <div class="form-row">
+            <p>Username: </p>
+            <input type="text" name="username" placeholder="Username" />
+        </div>
+        <div class="form-row">
+            <p>Password: </p>
+            <input type="password" name="password" placeholder="Password" />
+        </div>
+        <button type="submit">Login</button>
+        <button type="button"><a href="{% url 'register' %}">Create Account</a></button>
+    </form>
+
+    {% if error %}
+    <p>{{ error }}</p>
+    {% endif %}
+
+
+    <div class="attribution">
+        Attribution: <a href="https://www.vecteezy.com/free-vector/default-user">Default User Vectors by Vecteezy</a> and <a href="https://www.vecteezy.com/free-vector/profile">Profile Vectors by Vecteezy</a>
+    </div>
+</body>
+</html>
