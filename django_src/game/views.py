@@ -2,9 +2,9 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
+from main.parser import get_species
 from .models import BattlePartyState, OwnedLucid
 from .services import battle_engine
-from .services.lucid_data import get_species
 from .services.progression import (
     STARTER_SPECIES_IDS,
     apply_level_choice,
@@ -30,7 +30,7 @@ def _error_response(message, status=400):
 @require_GET
 def starter_options(request):
     profile = get_or_create_profile(request.user)
-    options = [get_species(species_id) for species_id in sorted(STARTER_SPECIES_IDS)]
+    options = [get_species(species_id).to_dict() for species_id in sorted(STARTER_SPECIES_IDS)]
     return JsonResponse(
         {
             "starter_chosen": profile.starter_species_id is not None,

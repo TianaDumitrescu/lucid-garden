@@ -1,5 +1,5 @@
 import math
-from .lucid_data import get_evolution_stage
+from main.parser import get_evolution_stage
 
 BASE_STATS = {
     "hp": 20,

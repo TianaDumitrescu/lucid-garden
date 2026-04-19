@@ -1,6 +1,6 @@
 from django.db import transaction
 from game.models import OwnedLucid, PlayerProfile
-from .lucid_data import get_species_for_level
+from main.parser import get_species_for_level
 
 STARTER_SPECIES_IDS = {1, 4, 7}
 VALID_STAT_CHOICES = {"hp", "attack", "speed"}
@@ -22,8 +22,8 @@ def get_party_queryset(user):
 # Handles evolution if level threshold crossed
 def sync_evolution(owned_lucid):
     target_species = get_species_for_level(owned_lucid.species_id, owned_lucid.level)
-    changed = owned_lucid.species_id != target_species["id"]
-    owned_lucid.species_id = target_species["id"]
+    changed = owned_lucid.species_id != target_species.get_id()
+    owned_lucid.species_id = target_species.get_id()
     return changed
 
 # MAIN PROGRESSION FUNCTIONS

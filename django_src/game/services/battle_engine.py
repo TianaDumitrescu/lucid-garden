@@ -1,7 +1,7 @@
 import random
 from django.db import transaction
 from game.models import BattlePartyState, BattleSession, OwnedLucid
-from .lucid_data import get_species
+from main.parser import get_species
 from .progression import get_or_create_profile, get_party_queryset
 from .spawn import build_enemy_upgrade_history, choose_wild_species, determine_enemy_level
 from .stats import calculate_damage, calculate_stats
@@ -16,8 +16,8 @@ def serialize_owned_lucid(owned_lucid, current_hp=None):
     payload = {
         "owned_id": owned_lucid.id,
         "species_id": owned_lucid.species_id,
-        "name": species["name"],
-        "types": species["type"],
+        "name": species.get_name(),
+        "types": species.get_types(),
         "level": owned_lucid.level,
         "party_slot": owned_lucid.party_slot,
         "pending_levelups": owned_lucid.pending_levelups,
@@ -45,8 +45,8 @@ def serialize_battle_session(session):
         "status": session.status,
         "enemy": {
             "species_id": session.enemy_species_id,
-            "name": enemy_species["name"],
-            "types": enemy_species["type"],
+            "name": enemy_species.get_name(),
+            "types": enemy_species.get_types(),
             "level": session.enemy_level,
             "stats": enemy_stats,
             "current_hp": session.enemy_current_hp,
@@ -112,19 +112,19 @@ def _resolve_enemy_turn(session):
     enemy_species = get_species(session.enemy_species_id)
     enemy_stats = calculate_stats(session.enemy_species_id, session.enemy_upgrade_history)
     defender_species = get_species(active_state.owned_lucid.species_id)
-    attack_type = _best_enemy_attack_type(enemy_species["type"], defender_species["type"])
-    multiplier = get_multiplier(attack_type, defender_species["type"])
+    attack_type = _best_enemy_attack_type(enemy_species.get_types(), defender_species.get_types())
+    multiplier = get_multiplier(attack_type, defender_species.get_types())
     damage = calculate_damage(enemy_stats["attack"], multiplier)
     active_state.current_hp = max(active_state.current_hp - damage, 0)
     active_state.save(update_fields=["current_hp"])
     session.enemy_turn_count += 1
     _append_log(
         session,
-        f"{enemy_species['name']} used {attack_type} for {damage} damage.",
+        f"{enemy_species.get_name()} used {attack_type} for {damage} damage.",
     )
     session.save(update_fields=["enemy_turn_count", "log", "updated_at"])
     if active_state.current_hp == 0:
-        _append_log(session, f"{defender_species['name']} fainted.")
+        _append_log(session, f"{defender_species.get_name()} fainted.")
         alive_exists = session.party_states.exclude(owned_lucid_id=active_state.owned_lucid_id).filter(current_hp__gt=0).exists()
         if alive_exists:
             session.status = BattleSession.STATUS_AWAITING_SWITCH
@@ -196,17 +196,17 @@ def start_battle(user):
     wild_species = choose_wild_species()
     enemy_level = determine_enemy_level(party, wild_species)
     enemy_upgrade_history = build_enemy_upgrade_history(enemy_level)
-    enemy_stats = calculate_stats(wild_species["id"], enemy_upgrade_history)
+    enemy_stats = calculate_stats(wild_species.get_id(), enemy_upgrade_history)
     profile.battle_charges -= 1
     profile.save(update_fields=["battle_charges", "updated_at"])
     session = BattleSession.objects.create(
         owner=user,
-        enemy_species_id=wild_species["id"],
+        enemy_species_id=wild_species.get_id(),
         enemy_level=enemy_level,
         enemy_upgrade_history=enemy_upgrade_history,
         enemy_current_hp=enemy_stats["hp"],
         active_party_lucid=party[0],
-        log=[f"A wild {wild_species['name']} appeared."],
+        log=[f"A wild {wild_species.get_name()} appeared."],
     )
     party_states = []
     for lucid in party:
@@ -235,22 +235,22 @@ def player_attack(user, attack_type_index):
     if active_state is None or active_state.current_hp == 0:
         raise ValueError("Choose an active Lucid before attacking.")
     player_species = get_species(active_state.owned_lucid.species_id)
-    if attack_type_index < 0 or attack_type_index >= len(player_species["type"]):
+    if attack_type_index < 0 or attack_type_index >= len(player_species.get_types()):
         raise ValueError("Invalid attack choice.")
     player_stats = calculate_stats(active_state.owned_lucid.species_id, active_state.owned_lucid.upgrade_history)
     enemy_species = get_species(session.enemy_species_id)
     enemy_stats = calculate_stats(session.enemy_species_id, session.enemy_upgrade_history)
     if _next_actor(session, player_stats["speed"], enemy_stats["speed"]) != "player":
         raise ValueError("It is not the player's turn.")
-    attack_type = player_species["type"][attack_type_index]
-    multiplier = get_multiplier(attack_type, enemy_species["type"])
+    attack_type = player_species.get_types()[attack_type_index]
+    multiplier = get_multiplier(attack_type, enemy_species.get_types())
     damage = calculate_damage(player_stats["attack"], multiplier)
     session.enemy_current_hp = max(session.enemy_current_hp - damage, 0)
     session.player_turn_count += 1
-    _append_log(session, f"{player_species['name']} used {attack_type} for {damage} damage.")
+    _append_log(session, f"{player_species.get_name()} used {attack_type} for {damage} damage.")
     session.save(update_fields=["enemy_current_hp", "player_turn_count", "log", "updated_at"])
     if session.enemy_current_hp == 0:
-        _append_log(session, f"{enemy_species['name']} fainted.")
+        _append_log(session, f"{enemy_species.get_name()} fainted.")
         session.save(update_fields=["log", "updated_at"])
         return _finish_victory(session)
     return _advance_until_player_turn(session)
@@ -271,7 +271,7 @@ def player_switch(user, owned_lucid_id):
     session.status = BattleSession.STATUS_ACTIVE
     session.player_turn_count = 0
     session.enemy_turn_count = 0
-    _append_log(session, f"Switched to {get_species(target_state.owned_lucid.species_id)['name']}.")
+    _append_log(session, f"Switched to {get_species(target_state.owned_lucid.species_id).get_name()}.")
     session.save(update_fields=["active_party_lucid", "status", "player_turn_count", "enemy_turn_count", "log", "updated_at"])
     free_turn_result = _resolve_enemy_turn(session)
     if free_turn_result is not None:
