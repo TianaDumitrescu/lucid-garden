@@ -18,13 +18,9 @@ class Migration(migrations.Migration):
             name='Lucid',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('identification', models.IntegerField()),
-                ('name', models.CharField(max_length=64)),
-                ('types', models.JSONField(default=list)),
-                ('description', models.CharField(max_length=1024)),
-                ('spawn_rate', models.FloatField()),
-                ('spawn_level_offset', models.IntegerField()),
-                ('evolution', models.JSONField(default=list)),
+                ('unique_id', models.IntegerField()),
+                ('nickname', models.CharField(max_length=64)),
+                ('species_id', models.IntegerField()),
             ],
         ),
         migrations.CreateModel(

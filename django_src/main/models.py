@@ -5,9 +5,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 from django.utils import timezone
-from parser import LUCIDS
-from parser import Lucid
-from parser import load_lucids
+from .parser import LUCIDS
+from .parser import load_lucids
 
 def create_lucid(unique_id, nickname, species_id):
     species_base = LUCIDS.get(species_id)

@@ -72,7 +72,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="ownedlucid",
             constraint=models.CheckConstraint(
-                check=Q(party_slot__isnull=True) | Q(party_slot__in=[1, 2, 3]),
+                condition=Q(party_slot__isnull=True) | Q(party_slot__in=[1, 2, 3]),
                 name="ownedlucid_valid_party_slot",
             ),
         ),

@@ -1,7 +1,8 @@
 import json
-from os import name
+from pathlib import Path
 
-LUCIDS = {};
+LUCIDS_PATH = Path(__file__).resolve().parents[2] / "lucids.json"
+LUCIDS = {}
 
 class LucidSpecies:
     identification = 0
@@ -40,8 +41,8 @@ class LucidSpecies:
         return self.evolution
 
 def load_lucids():
-    with open("../Lucids.json", "r") as file:
-        data = json.load(file);
+    with LUCIDS_PATH.open("r", encoding="utf-8") as file:
+        data = json.load(file)
 
     lucids = data["lucids"]
     for i in range(len(lucids)):
