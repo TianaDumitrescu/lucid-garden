@@ -1,6 +1,7 @@
 import random
 from django.db import transaction
-from game.models import BattlePartyState, BattleSession, OwnedLucid
+from game.models import BattlePartyState, BattleSession
+from main.models import Lucid, get_next_lucid_unique_id
 from main.parser import get_species
 from .progression import get_or_create_profile, get_party_queryset
 from .spawn import build_enemy_upgrade_history, choose_wild_species, determine_enemy_level
@@ -10,17 +11,17 @@ from .type_chart import get_multiplier
 # A template of this .py file was written by Codex
 
 # Utility function to serialize battle state (FOR FRONTEND)
-def serialize_owned_lucid(owned_lucid, current_hp=None):
-    species = get_species(owned_lucid.species_id)
-    stats = calculate_stats(owned_lucid.species_id, owned_lucid.upgrade_history)
+def serialize_owned_lucid(lucid, current_hp=None):
+    species = get_species(lucid.species_id)
+    stats = calculate_stats(lucid.species_id, lucid.upgrade_history)
     payload = {
-        "owned_id": owned_lucid.id,
-        "species_id": owned_lucid.species_id,
+        "owned_id": lucid.id,
+        "species_id": lucid.species_id,
         "name": species.get_name(),
         "types": species.get_types(),
-        "level": owned_lucid.level,
-        "party_slot": owned_lucid.party_slot,
-        "pending_levelups": owned_lucid.pending_levelups,
+        "level": lucid.level,
+        "party_slot": lucid.party_slot,
+        "pending_levelups": lucid.pending_levelups,
         "stats": stats,
         "current_hp": stats["hp"] if current_hp is None else current_hp,
     }
@@ -35,10 +36,10 @@ def serialize_battle_session(session):
         for state in session.party_states.select_related("owned_lucid").all()
     }
     party_payload = []
-    for owned_lucid in OwnedLucid.objects.filter(id__in=states.keys()).order_by("party_slot", "id"):
-        state = states[owned_lucid.id]
-        payload = serialize_owned_lucid(owned_lucid, current_hp=state.current_hp)
-        payload["is_active"] = session.active_party_lucid_id == owned_lucid.id
+    for lucid in Lucid.objects.filter(id__in=states.keys()).order_by("party_slot", "id"):
+        state = states[lucid.id]
+        payload = serialize_owned_lucid(lucid, current_hp=state.current_hp)
+        payload["is_active"] = session.active_party_lucid_id == lucid.id
         payload["is_fainted"] = state.current_hp == 0
         party_payload.append(payload)
     return {
@@ -152,9 +153,12 @@ def _advance_until_player_turn(session):
 
 # Handles battle end on player victory, granting Lucid to player and deleting session
 def _finish_victory(session):
-    caught_lucid = OwnedLucid.objects.create(
+    enemy_species = get_species(session.enemy_species_id)
+    caught_lucid = Lucid.objects.create(
         owner=session.owner,
         species_id=session.enemy_species_id,
+        unique_id=get_next_lucid_unique_id(),
+        nickname=enemy_species.get_name(),
         level=1,
         upgrade_history=[],
         pending_levelups=0,
