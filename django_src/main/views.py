@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
+from django.contrib import messages
 from game.models import BattleSession, PlayerProfile
 from game.services.progression import (
     ALARM_EARLY_NO_EFFECT,
@@ -75,6 +76,13 @@ def create_alarm(request):
     # if time already passed → schedule for tomorrow
     if alarm_datetime <= now:
         alarm_datetime += timezone.timedelta(days=1)
+
+    minimum_alarm_time = now + timezone.timedelta(hours=5)
+
+    if alarm_datetime < minimum_alarm_time:
+        messages.error(request, "You cannot create an alarm within 5 hours of the current time.")
+        return redirect("home")
+
 
     alarm = Alarm.objects.filter(user=request.user).first()
 

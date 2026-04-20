@@ -41,10 +41,25 @@
             </div>
             <button id="createAlarmBtn"><b>Create Alarm</b></button>
 
+            <div class="stats-section">
+                <h2>Stats</h2>
+                <div class="stats-box">
+                    <p>Streak: {{ game_profile.alarm_streak }}</p>
+                    <p>Battle Charges: {{ game_profile.battle_charges }}</p>
+                </div>
+            </div>
+
             <div id="alarmCreation" class="overlay">
                 <form method="POST" class="popup" action="{% url 'create_alarm' %}">
                     {% csrf_token %}
                     <h2>Create Alarm</h2>
+                    {% if messages %}
+                        <div id="django-messages" style="display:none;">
+                            {% for message in messages %}
+                                <p class="django-message">{{ message }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
 
                     <label>Time:</label>
                     <input type="time" name="time">
@@ -70,6 +85,7 @@
                     <button id="next-button" onclick="mainHub()">Next</button>
                     <button id="party-button" onclick="loadParty()">Show Party</button>
                     <button id="collection-button" onclick="loadCollection()">Show Collection</button>
+                    <button id="battle-button" onclick="startBattle()">Start Battle</button>
                 </div>
         </div>
     </div>
