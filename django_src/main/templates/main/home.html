@@ -53,6 +53,13 @@
                 <form method="POST" class="popup" action="{% url 'create_alarm' %}">
                     {% csrf_token %}
                     <h2>Create Alarm</h2>
+                    {% if messages %}
+                        <div id="django-messages" style="display:none;">
+                            {% for message in messages %}
+                                <p class="django-message">{{ message }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
 
                     <label>Time:</label>
                     <input type="time" name="time">

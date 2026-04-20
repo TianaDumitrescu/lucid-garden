@@ -467,7 +467,7 @@ async function startBattle() {
 
 // Called by startBattle(), shows the user the UI for the battle
 function showBattle(battle) {
-    
+    clearSections();
     let activeLucid = null;
 
     // Loops through the user's party to find which lucid is currently active in the battle (the one the user is currently controlling in the battle)
@@ -712,3 +712,11 @@ function showBattleLog(log) {
 }
 
 loadStarterData();
+
+const djangoMessages = document.querySelectorAll(".django-message");
+
+// Loops through any messages that were sent from the Django backend (like error messages for trying to create an alarm within 5 hours of the current time) 
+// and shows them to the user in an alert box
+for (let i = 0; i < djangoMessages.length; i++) {
+    alert(djangoMessages[i].textContent);
+}
