@@ -201,7 +201,7 @@ button {
     border: 1px solid #281c4e;
     border-radius: 7px;
     text-align: center;
-    width: 110px;
+    width: 140px;
     height: 30px;
 }
 
@@ -292,4 +292,53 @@ button:hover {
 
 .next-button, .party-button, .collection-button {
     display: none;
+}
+
+.battle-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.battle-lucid {
+    flex: 1;
+    text-align: center;
+}
+
+.battle-middle {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.battle-name {
+    margin-bottom: 10px;
+}
+
+.lucid-div {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid white;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+}
+
+.lucid-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lucid-info p {
+    margin: 0;
+}
+
+.lucid-name {
+    font-size: 18px;
 }
