@@ -10,7 +10,7 @@ from game.services.progression import (
     ALARM_ON_TIME,
     apply_alarm_result,
 )
-from .forms import RegisterForm
+from .forms import EditProfileForm, RegisterForm
 from .models import Alarm, UserDatabase
 from django.utils import timezone
 
@@ -30,7 +30,7 @@ def home(request):
     # Make name the given name, if not the username
     current_user = UserDatabase.objects.get(user=request.user)
     name = current_user.user.first_name
-    if name is "":
+    if name == "":
         name = current_user.user.username
 
     return render(request, "main/home.html", {
@@ -100,6 +100,9 @@ def account(request):
     current_user = UserDatabase.objects.get(user=request.user)
     
     name = current_user.user.first_name
+    if name == "":
+        name = current_user.user.username
+
     username = current_user.user.username
     email = current_user.user.email
 
@@ -163,3 +166,15 @@ def leaderboard(request):
     return render(request, "main/leaderboard.html", {
         "leaderboard": leaderboard_data,
     })
+
+@login_required
+def edit_profile(request):
+    if request.method == "POST":
+        form = EditProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("account")
+    else:
+        form = EditProfileForm(instance=request.user)
+
+    return render(request, "main/edit_profile.html", {"form": form})
