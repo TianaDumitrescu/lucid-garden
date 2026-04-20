@@ -294,6 +294,11 @@ button:hover {
     display: none;
 }
 
+.game-buttons {
+    display: flex;
+    justify-content: center; /* Centers horizontally */
+}
+
 .battle-layout {
     display: flex;
     justify-content: space-between;
@@ -341,4 +346,16 @@ button:hover {
 
 .lucid-name {
     font-size: 18px;
+}
+
+.stats-section {
+    margin-top: 24px;
+}
+
+.stats-box {
+    padding-left: 12px;
+}
+
+.stats-box p {
+    margin: 8px 0;
 }

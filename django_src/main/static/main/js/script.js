@@ -180,6 +180,9 @@ async function loadParty() {
         // Gives the current party of the user from the backend and set it in the frontend
         setSelectedPartyFromCurrentParty(data.party); 
 
+        showLevelUpOptions(data.party);
+
+
         if (partyButton.textContent === "Show Party") {
             showParty(data.party);
             partyButton.textContent = "Hide Party";
@@ -476,6 +479,7 @@ function showBattle(battle) {
     }
 
     let attackButtons = "";
+    let switchButtons = "";
 
 
     // Loops through the types of attacks that the active lucid has and creates a button for each one that allows the user to choose that attack in battle
@@ -485,11 +489,50 @@ function showBattle(battle) {
         `;
     }
 
+    // Used as a just in case measure if there were no active lucid found in the user's party for some reason, which should never happen, 
+    // but if it does we just show a message to the user and don't show the battle UI since it wouldn't work without an active lucid
+    if (!activeLucid) {
+        battleSection.innerHTML = "<p>No active Lucid found.</p>";
+        return;
+    }
+
+    // Loops through the user's party to find any lucids that are not active but also not fainted,
+    // which means they are eligible to be switched into battle, and creates a button for each one to allow the user to switch to that lucid in battle  
+    for (let i = 0; i < battle.party.length; i++) {
+        const lucid = battle.party[i];
+
+        if (!lucid.is_active && !lucid.is_fainted) {
+            switchButtons += `
+                <button onclick="switchLucid(${lucid.owned_id})">
+                    Switch to ${lucid.name}
+                </button>
+            `;
+        }
+    }
+
+
+
+    let middleSection = "";
+    // If the battle is currently in the "awaiting_switch" status, it means the user has just had their active lucid fainted 
+    // and now they have to choose which lucid to switch into battle, so we only show the switch buttons and not the attack or run options
+    if (battle.status === "awaiting_switch") {
+        middleSection = `
+            <p><strong>Choose a Lucid to switch to</strong></p>
+            ${switchButtons}
+        `;
+    } else {
+        middleSection = `
+            <p><strong>Battle</strong></p>
+            ${attackButtons}
+            ${switchButtons}
+            <button onclick="runBattle()">Run</button>
+        `;
+    }
+
     nextButton.style.display = "none";
     partyButton.style.display = "none";
     collectionButton.style.display = "none";
     battleButton.style.display = "none";
-
 
     let html = `
         <div class="battle-layout">
@@ -500,9 +543,7 @@ function showBattle(battle) {
             </div>
 
             <div class="battle-middle">
-                <p><strong>Battle</strong></p>
-                ${attackButtons}
-                <button onclick="runBattle()">Run</button>
+                ${middleSection}
             </div>
 
             <div class="battle-lucid">
@@ -511,6 +552,8 @@ function showBattle(battle) {
                 <p>HP: ${battle.enemy.current_hp}/${battle.enemy.stats.hp}</p>
             </div>
         </div>
+
+        <div id="battle-log"></div>
     `;
 
     html += "<div id='battle-log'></div>";
@@ -568,6 +611,35 @@ async function fight(attackTypeIndex) {
         handleBattleResult(data);
     } catch (error) {
         showGameMessage("Something went wrong during the attack.");
+        console.log(error);
+    }
+}
+
+// Called when the user clicks the switch button in battle, this function sends the user's choice for which lucid to switch into battle to the backend,
+async function switchLucid(ownedLucidId) {
+    try {
+        // Uses a POST request to send the user's choice for which lucid to switch into battle to the backend, 
+        const response = await fetch("/game/battle/switch/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie()
+            },
+            body: JSON.stringify({
+                owned_lucid_id: ownedLucidId
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showGameMessage(data.error || "Could not switch Lucid.");
+            return;
+        }
+
+        handleBattleResult(data);
+    } catch (error) {
+        showGameMessage("Something went wrong while switching.");
         console.log(error);
     }
 }

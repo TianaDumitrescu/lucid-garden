@@ -41,6 +41,14 @@
             </div>
             <button id="createAlarmBtn"><b>Create Alarm</b></button>
 
+            <div class="stats-section">
+                <h2>Stats</h2>
+                <div class="stats-box">
+                    <p>Streak: {{ game_profile.alarm_streak }}</p>
+                    <p>Battle Charges: {{ game_profile.battle_charges }}</p>
+                </div>
+            </div>
+
             <div id="alarmCreation" class="overlay">
                 <form method="POST" class="popup" action="{% url 'create_alarm' %}">
                     {% csrf_token %}
