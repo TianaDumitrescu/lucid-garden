@@ -379,3 +379,13 @@ button:hover {
 th, td {
     padding: 10px 25px;
 }
+
+.leaderboard-container {
+    width: 90%; /* Main content takes up 80% of the width */
+    background-color: #281c4e; 
+    margin-left: auto; 
+    margin-right: auto;
+    padding: 20px;
+    max-width: 700px; /* Limit the maximum width of the content */
+    border: 1px solid #e297d2;
+}
