@@ -1,6 +1,6 @@
 from django.db import transaction
 from game.models import PlayerProfile
-from main.models import Lucid, get_next_lucid_unique_id
+from main.models import Lucid, get_next_lucid_unique_id, UserDatabase
 from main.parser import get_species, get_species_for_level
 
 STARTER_SPECIES_IDS = {1, 4, 7}
@@ -138,12 +138,24 @@ def apply_alarm_result(user, outcome):
         if profile.alarm_streak % 5 == 0:
             profile.battle_charges += 1
         profile.save(update_fields=["alarm_streak", "battle_charges", "updated_at"])
+
+        # Add points to main level (UserDatabase)
+        current_user = UserDatabase.objects.get(user=user)
+        current_user.add_points()
+        current_user.save()
+
     # Breaks streak; de-levels party
     elif outcome == ALARM_LATE:
         profile.alarm_streak = 0
         profile.save(update_fields=["alarm_streak", "updated_at"])
         for lucid in get_party_queryset(user):
             level_down_lucid(lucid)
+
+        # Subtract points to main level (UserDatabase)
+        current_user = UserDatabase.objects.get(user=user)
+        current_user.subtract_points()
+        current_user.save()
+            
     elif outcome != ALARM_EARLY_NO_EFFECT:
         raise ValueError("Unknown alarm outcome.")
     summary["streak"] = profile.alarm_streak
