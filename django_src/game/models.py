@@ -8,6 +8,7 @@ class PlayerProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     alarm_streak = models.PositiveIntegerField(default=0)
     battle_charges = models.PositiveIntegerField(default=0)
+    battleWinStreak = models.PositiveIntegerField(default=0)
     starter_species_id = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

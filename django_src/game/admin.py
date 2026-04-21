@@ -5,7 +5,7 @@ from .models import BattlePartyState, BattleSession, PlayerProfile
 # Registers core game models for debugging purpose
 @admin.register(PlayerProfile)
 class PlayerProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "alarm_streak", "battle_charges", "starter_species_id")
+    list_display = ("user", "alarm_streak", "battle_charges", "battleWinStreak", "starter_species_id")
 
 @admin.register(Lucid)
 class LucidAdmin(admin.ModelAdmin):

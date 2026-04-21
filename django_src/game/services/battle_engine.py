@@ -153,6 +153,9 @@ def _advance_until_player_turn(session):
 
 # Handles battle end on player victory, granting Lucid to player and deleting session
 def _finish_victory(session):
+    profile = get_or_create_profile(session.owner)
+    profile.battleWinStreak += 1
+    profile.save(update_fields=["battleWinStreak", "updated_at"])
     enemy_species = get_species(session.enemy_species_id)
     caught_lucid = Lucid.objects.create(
         owner=session.owner,
@@ -173,6 +176,9 @@ def _finish_victory(session):
 
 # Handles battle end on player loss, just deleting session
 def _finish_loss(session):
+    profile = get_or_create_profile(session.owner)
+    profile.battleWinStreak = 0
+    profile.save(update_fields=["battleWinStreak", "updated_at"])
     session.delete()
     return {"result": "loss"}
 
