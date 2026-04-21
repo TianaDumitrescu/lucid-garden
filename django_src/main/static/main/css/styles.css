@@ -210,6 +210,22 @@ button:hover {
     border: 2px solid #493786;
 }
 
+.button-link {
+    background-color: #e297d2;
+    color: #281c4e;
+    border: 1px solid #281c4e;
+    border-radius: 7px;
+    text-align: center;
+    width: 110px;
+    height: 30px;
+    line-height: 30px;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.button-link:hover {
+    border: 2px solid #493786;
+}
 
 /* ACCOUNT PAGE STYLES */
 
@@ -358,4 +374,8 @@ button:hover {
 
 .stats-box p {
     margin: 8px 0;
+}
+
+th, td {
+    padding: 10px 25px;
 }

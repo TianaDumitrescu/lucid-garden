@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
@@ -11,7 +11,7 @@ from game.services.progression import (
     ALARM_ON_TIME,
     apply_alarm_result,
 )
-from .forms import RegisterForm
+from .forms import EditProfileForm, RegisterForm, PasswordChangeForm
 from .models import Alarm, UserDatabase
 from django.utils import timezone
 
@@ -28,10 +28,17 @@ def home(request):
     if alarm:
         is_due = alarm.is_due()
 
+    # Make name the given name, if not the username
+    current_user = UserDatabase.objects.get(user=request.user)
+    name = current_user.user.first_name
+    if name == "":
+        name = current_user.user.username
+
     return render(request, "main/home.html", {
         "alarm": alarm,
         "is_due": is_due,
         "user": user,
+        "name": name,
         "game_profile": profile,
         "has_active_battle": BattleSession.objects.filter(owner=user).exists(),
     })
@@ -98,7 +105,17 @@ def create_alarm(request):
 
 @login_required
 def account(request):
-    return render(request, 'main/account.html')
+    current_user = UserDatabase.objects.get(user=request.user)
+    
+    name = current_user.user.first_name
+    if name == "":
+        name = current_user.user.username
+
+    username = current_user.user.username
+    email = current_user.user.email
+
+    return render(request, 'main/account.html', {"user_name": name, "user_username": username, "user_email": email})
+
 
 def register(request):
     if request.method == "POST":
@@ -108,7 +125,7 @@ def register(request):
 
             # Create your custom UserDatabase entry
             UserDatabase.objects.create(user=user)
-
+     
             return redirect("login")
     else:
         form = RegisterForm()
@@ -124,6 +141,14 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
+
+            # Adds logic for changing password
+            profile = UserDatabase.objects.get(user=user)
+            time_since = timezone.now() - profile.password_last_changed
+            ##if time_since.total_seconds() >= 60: // For demoing purposes
+            if time_since.days >= 60:
+                return redirect("edit_password")
+            
             return redirect("home")
         else:
             return render(request, "main/login.html", {"error": "Invalid credentials"})
@@ -133,3 +158,56 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect("login")
+
+@login_required
+def leaderboard(request):
+    user_database = UserDatabase.objects.select_related("user").all()
+
+    leaderboard_data = []
+    for user_obj in user_database:
+        profile, _ = PlayerProfile.objects.get_or_create(user=user_obj.user)
+
+        leaderboard_data.append({
+            "name": user_obj.user.first_name,
+            "username": user_obj.user.username,
+            "total_points": user_obj.totalPoints,
+            "alarm_streak": profile.alarm_streak,
+            "battle_win_streak": profile.battleWinStreak,
+        })
+
+    leaderboard_data.sort(
+        key=lambda x: (x["total_points"], x["alarm_streak"], x["battle_win_streak"]),
+        reverse=True,
+    )
+
+    return render(request, "main/leaderboard.html", {
+        "leaderboard": leaderboard_data,
+    })
+
+@login_required
+def edit_profile(request):
+    if request.method == "POST":
+        form = EditProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("account")
+    else:
+        form = EditProfileForm(instance=request.user)
+
+    return render(request, "main/edit_profile.html", {"form": form})
+
+@login_required
+def edit_password(request):
+    if request.method == "POST":
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            profile = UserDatabase.objects.get(user=request.user)
+            profile.password_last_changed = timezone.now()
+            profile.save(update_fields=["password_last_changed"])
+            return redirect("home")
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, "edit_password.html", {"form": form})

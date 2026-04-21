@@ -168,13 +168,14 @@ class UserDatabase(models.Model):
     # The number represents the Lucid ID
     #lucids = ArrayField(models.IntegerField(), size = 25)
     lucids = models.JSONField(default=list)
+    # The days since password was last changed
+    password_last_changed = models.DateTimeField(default=timezone.now)
     # Represents the actual alarm clock model
     alarm = models.ForeignKey(Alarm, on_delete = models.SET_NULL, null = True, blank = True)
 
     # String representing the user
     def __str__(self):
         return f"Welcome {self.user.username}!"
-
 
     # Getter for the user
     def get_user(self):
@@ -186,22 +187,26 @@ class UserDatabase(models.Model):
         self.totalPoints += int(self.currentWinStreak**2 + 10)
         self.currentWinStreak += 1
         self.currentLoseStreak = 0
-
+        self.save(update_fields=["totalPoints", "currentWinStreak", "currentLoseStreak"])
+    
     # We use a quadratic function again to allow for more points
     # to be taken during higher lose streaks.
     def subtract_points(self):
         self.totalPoints -= int(self.currentLoseStreak**2 + 10)
         self.currentLoseStreak += 1
         self.currentWinStreak = 0
+        self.save(update_fields=["totalPoints", "currentWinStreak", "currentLoseStreak"])
 
     # Returns -1 if too expensive, and the amount remaining otherwise.
     def spend_points(self, spending):
         if (spending > self.totalPoints):
+            self.save(update_fields=["totalPoints"])
             return -1
         else:
             self.totalPoints -= spending
+            self.save(update_fields=["totalPoints"])
             return self.totalPoints
-            
+
     # # Setter for the alarm
     # def set_alarm(self, alarm):
     #     self.alarm = alarm

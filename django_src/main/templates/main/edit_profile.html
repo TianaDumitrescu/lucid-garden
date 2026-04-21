@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucid Garden: Account</title>
+    <title>Lucid Garden: Edit Profile</title>
     <link rel="stylesheet" href="{% static 'main/css/styles.css' %}">
     <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
@@ -22,18 +22,15 @@
         </nav>
     </header>
 
-    <div class="account-container">
-        <img src="{% static 'main/images/profile.jpg' %}" class="profile-pic">
-        <h2>Profile</h2>
-        <p>Name: {{ user_name}}</p>
-        <p>Username: {{ user_username}}</p>
-        <p>Email: {{ user_email}}</p>
-
+    <form method="POST" class="register-form">
+        {% csrf_token %}
+        <h2>Edit Profile</h2>
+        {{ form.as_p }}
         <div class="button-row">
-            <a href="{% url 'edit_profile' %}" class="button-link">Edit Profile</a>
-            <a href="{% url 'logout' %}" class="button-link">Logout</a>
+            <button type="submit">Save</button>
+            <a href="{% url 'account' %}" class="button-link">Cancel</a>
         </div>
-    </div>
+    </form>
 
     <div class="attribution">
         Attribution: <a href="https://www.vecteezy.com/free-vector/default-user">Default User Vectors by Vecteezy</a> and <a href="https://www.vecteezy.com/free-vector/profile">Profile Vectors by Vecteezy</a>
